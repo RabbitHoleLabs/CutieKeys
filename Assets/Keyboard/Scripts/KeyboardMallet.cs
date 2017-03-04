@@ -16,7 +16,7 @@ namespace Normal.UI {
         private Vector3   _newMalletHeadPosition;
 
         // Internal
-        [HideInInspector]
+        // [HideInInspector]
         public Keyboard _keyboard;
 
         void Awake() {
@@ -25,6 +25,7 @@ namespace Normal.UI {
             rigidbody.useGravity  = false;
             rigidbody.isKinematic = true;
             rigidbody.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+            // _keyboard = GameObject.Find("Keyboard");
         }
 
         // Watch for new poses event from SteamVR.
