@@ -75,8 +75,10 @@ namespace Normal.UI {
                         shift = false;
                 }
 
-                if (shouldFireKeyPressEvent)
+                if (shouldFireKeyPressEvent) {
+                    GetComponent<TrieManager>().updateTrie(keyPress);
                     keyPressed(this, keyPress);
+                }
             }
         }
 

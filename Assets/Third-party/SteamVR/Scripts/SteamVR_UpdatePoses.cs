@@ -21,7 +21,8 @@ public class SteamVR_UpdatePoses : MonoBehaviour
 		camera.depth = -9999;
 	}
 #endif
-	void OnPreCull()
+    //changed from onPreCull to fix controller ui lag
+	void LateUpdate()
 	{
 		var compositor = OpenVR.Compositor;
 		if (compositor != null)

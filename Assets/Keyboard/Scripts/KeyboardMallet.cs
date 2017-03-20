@@ -7,6 +7,8 @@ namespace Normal.UI {
     public class KeyboardMallet : MonoBehaviour {
         [SerializeField]
         private SteamVR_TrackedObject _trackedObject;
+        [SerializeField]
+        private SteamVR_TrackedController _controller;
 
         [SerializeField]
         private Transform _head;
@@ -16,7 +18,7 @@ namespace Normal.UI {
         private Vector3   _newMalletHeadPosition;
 
         // Internal
-        // [HideInInspector]
+        [HideInInspector]
         public Keyboard _keyboard;
 
         void Awake() {
@@ -25,7 +27,6 @@ namespace Normal.UI {
             rigidbody.useGravity  = false;
             rigidbody.isKinematic = true;
             rigidbody.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
-            // _keyboard = GameObject.Find("Keyboard");
         }
 
         // Watch for new poses event from SteamVR.
