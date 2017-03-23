@@ -10,14 +10,15 @@ public class VisualTrie : MonoBehaviour {
     public Transform LetterCube;
 
     public int branchesToDisplay;
-    public int branchConeWidth;
     public int depth;
+
+    public float branchConeWidth;
     public float branchLength;
-    
+    public float narrowingFactor;
 
     private Trie trie;
     private string currInputPrefix;
-    private Node currNode;
+    private Node rootNode;
 
     // Load trie data from file
     void Start() {
@@ -40,7 +41,7 @@ public class VisualTrie : MonoBehaviour {
             trie.Insert(wordAndFreq[1], wordWeight);
         }
 
-        // DEBUG
+        /* DEBUG
         Debug.Log("testing with th");
         Node prefix = trie.Prefix("th");
         Debug.Log(prefix.Weight);
@@ -48,9 +49,12 @@ public class VisualTrie : MonoBehaviour {
         foreach (var child in prefix.Children) {
             Debug.Log("child " + child.Value + " weight " + child.Weight);
         }
+        */
 
-        currNode = trie.Prefix("");
-        renderTrie();
+        currInputPrefix = "";
+        rootNode = trie.Prefix("");
+
+        updateTrie("t");
     }
 
     public void updateTrie(string letter) {
@@ -60,31 +64,36 @@ public class VisualTrie : MonoBehaviour {
         else {
             currInputPrefix += letter;
         }
-        currNode = trie.Prefix(currInputPrefix);
+        rootNode = trie.Prefix(currInputPrefix);
         renderTrie();
     }
 
     private void renderTrie() {
         Transform rootCube = Instantiate(LetterCube, transform.position, transform.rotation, transform);
-        renderBranches(rootCube, 1);
+        rootCube.GetComponentInChildren<Text>().text = currInputPrefix[currInputPrefix.Length-1].ToString();
+        renderBranches(rootCube, rootNode, 0);
     }
 
-    private void renderBranches(Transform currRoot, int currDepth) {
-        if (currDepth > depth) return;
-        /*
-        int sectorAngle = branchConeWidth/(branchesToDisplay + 1);
-        int currAngle = sectorAngle;
-        for (int i = 0; i < branchesToDisplay; i++) {
-            //make cube at 60 degrees offset from root + currAngle
-            Instantiate(LetterCube, currRoot.transform.position + new Vector3(, currRoot.transform.rotation, transform);
+    private void renderBranches(Transform currRootCube, Node currTrieNode, int currDepth) {
+        // base case
+        if (currDepth >= depth) return;
+        // each branch divides the total branch cone width into sectors
+        // we've chosen not to allow branches on the edges of the branch cone, so number of sectors will be branches + 1
+        float currConeWidth = branchConeWidth - (currDepth * narrowingFactor);
+        float sectorAngle = currConeWidth / (branchesToDisplay + 1);
+        float currAngle = -(currConeWidth/2f) + sectorAngle; // starting angle is half of the branch cone width from vertical + one sector
+        for (int i = 0; i < branchesToDisplay && i < currTrieNode.Children.Count; i++) {
+            Quaternion angle = Quaternion.Euler(0f,0f,currAngle);
+            // instantiate at the same position, but at an angle
+            Transform currBranch = Instantiate(LetterCube, currRootCube.transform.position, currRootCube.transform.rotation * angle, transform);
+            // next move the new cube in the right direction scaled by branchLength
+            currBranch.position += angle * currRootCube.transform.up.normalized * (branchLength);
+            currBranch.GetComponentInChildren<Text>().text = currTrieNode.Children[i].Value.ToString();
+            if (!currTrieNode.Children[i].IsLeaf()) {
+                renderBranches(currBranch, currTrieNode.Children[i], currDepth + 1);
+            }
+            currAngle += sectorAngle;
         }
-        */
-
-        //TODO: add rotation onto spawned branch cubes so that they actually branch away from eachother, this will fix current overlap
-        Transform branch1 = Instantiate(LetterCube, currRoot.transform.position + new Vector3(0.05f, 0f, branchLength), currRoot.transform.rotation, transform);
-        renderBranches(branch1, currDepth + 1);
-        Transform branch2 = Instantiate(LetterCube, currRoot.transform.position + new Vector3(-0.05f, 0f, branchLength), currRoot.transform.rotation, transform);
-        renderBranches(branch2, currDepth + 1);
     }
 
     // Update is called once per frame
