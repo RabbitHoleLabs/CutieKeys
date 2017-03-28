@@ -61,10 +61,12 @@ public class VisualTrie : MonoBehaviour {
         // starting angle is half of the branch cone width from vertical + one sector width
         float currAngle = -(currConeWidth/2f) + sectorWidth;
         for (int i = 0; i < branchesToDisplay && i < rootCube.trieNode.Children.Count; i++) {
-            // instantiate and orient new letterCube, parented to current cube
+            // instantiate new letterCube parented to current cube
             LetterCube newCube = Instantiate(LetterCube, rootCube.transform.position, rootCube.transform.rotation, rootCube.transform).GetComponent<LetterCube>();
+            //rotate it then move it "up" relative to it's rotation, away from the root cube
             newCube.transform.Rotate(0f, 0f, currAngle);
-            newCube.transform.position += newCube.transform.up.normalized * branchLength*2f; // not entirely sure why we need to multiply by 2 there to get the right distance.
+            // distance moved also needs to be scaled relative to the size of this visualTrie and the requested branch length. the 2... makes it work. I think because of the way cylinder size is measured?
+            newCube.transform.position += newCube.transform.up.normalized * transform.lossyScale.y * branchLength * 2f;
             newCube.setStickLength(branchLength);
             newCube.assignNode(rootCube.trieNode.Children[i]);
             //recurse the newly made cube, then continue with this set of branches
