@@ -11,18 +11,18 @@ public class VisualTrie : MonoBehaviour {
 
     public int branchesToDisplay;
     public int depth;
-
     public float branchConeWidth;
     public float branchLength;
     public float narrowingFactor;
 
     private Trie trie;
+    private LetterCube rootCube;
     private string currInputPrefix;
-    private Node rootNode;
+
 
     // Load trie data from file
     void Start() {
-
+        currInputPrefix = "";
         trie = new Trie();
         StreamReader stream = new StreamReader(wordList);
 
@@ -40,64 +40,60 @@ public class VisualTrie : MonoBehaviour {
             }
             trie.Insert(wordAndFreq[1], wordWeight);
         }
-
-        /* DEBUG
-        Debug.Log("testing with th");
-        Node prefix = trie.Prefix("th");
-        Debug.Log(prefix.Weight);
-        Debug.Log(prefix.Depth);
-        foreach (var child in prefix.Children) {
-            Debug.Log("child " + child.Value + " weight " + child.Weight);
-        }
-        */
-
-        currInputPrefix = "";
-        rootNode = trie.Prefix("");
-
-        updateTrie("t");
     }
 
-    public void updateTrie(string letter) {
-        if (letter == " ") {
-            currInputPrefix = "";
-        }
-        else {
-            currInputPrefix += letter;
-        }
-        rootNode = trie.Prefix(currInputPrefix);
-        renderTrie();
+    public void updateTrie() {
+        clearTrie();
+        rootCube = Instantiate(LetterCube, transform.position, transform.rotation, transform).GetComponent<LetterCube>();
+        rootCube.assignNode(trie.Prefix(currInputPrefix));
+        rootCube.setStickLength(0);
+        renderBranches(rootCube, 0);
     }
 
-    private void renderTrie() {
-        Transform rootCube = Instantiate(LetterCube, transform.position, transform.rotation, transform);
-        rootCube.GetComponentInChildren<Text>().text = currInputPrefix[currInputPrefix.Length-1].ToString();
-        renderBranches(rootCube, rootNode, 0);
-    }
-
-    private void renderBranches(Transform currRootCube, Node currTrieNode, int currDepth) {
+    private void renderBranches(LetterCube rootCube, int currDepth) {
         // base case
-        if (currDepth >= depth) return;
-        // each branch divides the total branch cone width into sectors
-        // we've chosen not to allow branches on the edges of the branch cone, so number of sectors will be branches + 1
+        if (currDepth >= depth || rootCube.trieNode.IsLeaf()) return;
+        // scale the cone width down by narrowingFactor at each level
         float currConeWidth = branchConeWidth - (currDepth * narrowingFactor);
-        float sectorAngle = currConeWidth / (branchesToDisplay + 1);
-        float currAngle = -(currConeWidth/2f) + sectorAngle; // starting angle is half of the branch cone width from vertical + one sector
-        for (int i = 0; i < branchesToDisplay && i < currTrieNode.Children.Count; i++) {
-            Quaternion angle = Quaternion.Euler(0f,0f,currAngle);
-            // instantiate at the same position, but at an angle
-            Transform currBranch = Instantiate(LetterCube, currRootCube.transform.position, currRootCube.transform.rotation * angle, transform);
-            // next move the new cube in the right direction scaled by branchLength
-            currBranch.position += angle * currRootCube.transform.up.normalized * (branchLength);
-            currBranch.GetComponentInChildren<Text>().text = currTrieNode.Children[i].Value.ToString();
-            if (!currTrieNode.Children[i].IsLeaf()) {
-                renderBranches(currBranch, currTrieNode.Children[i], currDepth + 1);
-            }
-            currAngle += sectorAngle;
+        // each branch divides the total available cone width into sectors
+        // we've chosen not to allow branches on the edges of this cone, so number of sectors will be branches + 1
+        float sectorWidth = currConeWidth / (branchesToDisplay + 1);
+        // starting angle is half of the branch cone width from vertical + one sector width
+        float currAngle = -(currConeWidth/2f) + sectorWidth;
+        for (int i = 0; i < branchesToDisplay && i < rootCube.trieNode.Children.Count; i++) {
+            // instantiate and orient new letterCube, parented to current cube
+            LetterCube newCube = Instantiate(LetterCube, rootCube.transform.position, rootCube.transform.rotation, rootCube.transform).GetComponent<LetterCube>();
+            newCube.transform.Rotate(0f, 0f, currAngle);
+            newCube.transform.position += newCube.transform.up.normalized * branchLength*2f; // not entirely sure why we need to multiply by 2 there to get the right distance.
+            newCube.setStickLength(branchLength);
+            newCube.assignNode(rootCube.trieNode.Children[i]);
+            //recurse the newly made cube, then continue with this set of branches
+            renderBranches(newCube, currDepth + 1);
+            currAngle += sectorWidth;
+        }
+    }
+
+    private void clearTrie() {
+        if (rootCube != null) {
+            DestroyImmediate(rootCube.transform.gameObject);
         }
     }
 
     // Update is called once per frame
     void Update() {
-
+        foreach (char c in Input.inputString) {
+            if (c == "\b"[0]) {
+                if (currInputPrefix.Length != 0) {
+                    currInputPrefix = currInputPrefix.Substring(0, currInputPrefix.Length - 1);
+                }
+            } else {
+                if (c == " "[0]) {
+                    currInputPrefix = "";
+                } else {
+                    currInputPrefix += c;
+                }
+            }
+        }
+        updateTrie();
     }
 }

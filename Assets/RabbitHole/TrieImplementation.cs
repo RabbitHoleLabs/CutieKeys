@@ -71,7 +71,7 @@ namespace TrieImplementation
         public bool Search(string s)
         {
             Node prefix = Prefix(s);
-            return prefix.Depth == s.Length && prefix.FindChildNode('$') != null;
+            return prefix.Depth == s.Length && prefix.FindChildNode(' ') != null;
         }
 
         public void Insert(string s, int weight)
@@ -86,14 +86,14 @@ namespace TrieImplementation
                 current = newNode;
             }
 
-            current.Children.Add(new Node('$', current.Depth + 1, weight, current));
+            current.Children.Add(new Node(' ', current.Depth + 1, weight, current));
         }
 
         public void Delete(string s)
         {
             if (Search(s))
             {
-                Node node = Prefix(s).FindChildNode('$');
+                Node node = Prefix(s).FindChildNode(' ');
 
                 while (node.IsLeaf())
                 {
