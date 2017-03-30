@@ -8,6 +8,7 @@ public class VisualTrie : MonoBehaviour {
 
     public string wordList;
     public Transform LetterCube;
+    public Text displayText;
 
     public int branchesToDisplay;
     public int depth;
@@ -18,11 +19,11 @@ public class VisualTrie : MonoBehaviour {
     private Trie trie;
     private LetterCube rootCube;
     private string currInputPrefix;
+    private bool movingRoot;
 
 
     // Load trie data from file
     void Start() {
-        currInputPrefix = "";
         trie = new Trie();
         StreamReader stream = new StreamReader(wordList);
 
@@ -40,9 +41,12 @@ public class VisualTrie : MonoBehaviour {
             }
             trie.Insert(wordAndFreq[1], wordWeight);
         }
+        
+        currInputPrefix = "";
+        movingRoot = false;
 
         //DEBUG
-        currInputPrefix = "t";
+        //currInputPrefix = "t";
         updateTriePrefix();
 
     }
@@ -56,40 +60,60 @@ public class VisualTrie : MonoBehaviour {
     }
 
     public void advanceTrie(int selection) {
-        LetterCube selectedCube = transform.GetChild(0).GetChild(selection + 2).GetComponent<LetterCube>();
+        // get letterCube from selection number
+        LetterCube selectedCube = rootCube.transform.GetChild(selection + 2).GetComponent<LetterCube>(); // +2 to get past stick and label
+        if (selectedCube.trieNode.Value == ' ') {
+            currInputPrefix = "";
+            updateTriePrefix();
+            return;
+        }
         currInputPrefix += selectedCube.trieNode.Value;
+        // de-parent selected node from rootcube and parent it to master visual trie object
         selectedCube.transform.SetParent(transform);
-        clearTrie();
+        // next delete current root, this removes anything not in selected branch
+        DestroyImmediate(rootCube.transform.gameObject);
+        //set up new root cube and start moving it towards where the root cube should be
         rootCube = selectedCube;
-        rootCube.transform.position = transform.position;
-        rootCube.transform.rotation = transform.rotation;
         rootCube.makeInvisible();
-        renderBranches(rootCube, 0);
+        movingRoot = true;
+        //extend any truncated branchesat the end of the new remaining branch
+        GameObject[] truncatedBranches = GameObject.FindGameObjectsWithTag("truncatedBranch");
+        foreach(GameObject branch in truncatedBranches) {
+            renderBranches(branch.transform.GetComponent<LetterCube>(), depth - 1);
+            branch.tag = "Untagged";
+        }
+
+        
 
     }
 
     private void renderBranches(LetterCube rootCube, int currDepth) {
         // base case
-        if (currDepth >= depth || rootCube.trieNode.IsLeaf()) return;
+        if (currDepth >= depth) {
+            if (!rootCube.trieNode.IsLeaf()) {
+                rootCube.tag = "truncatedBranch";
+            }
+            return;
+        }
         // scale the cone width down by narrowingFactor at each level
         float currConeWidth = branchConeWidth - (currDepth * narrowingFactor);
         // each branch divides the total available cone width into sectors
         // we've chosen not to allow branches on the edges of this cone, so number of sectors will be branches + 1
         float sectorWidth = currConeWidth / (branchesToDisplay + 1);
         // starting angle is half of the branch cone width from vertical + one sector width
-        float currAngle = -(currConeWidth/2f) + sectorWidth;
+        float currAngle = (currConeWidth/2f) - sectorWidth;
         for (int i = 0; i < branchesToDisplay && i < rootCube.trieNode.Children.Count; i++) {
             // instantiate new letterCube parented to current cube
             LetterCube newCube = Instantiate(LetterCube, rootCube.transform.position, rootCube.transform.rotation, rootCube.transform).GetComponent<LetterCube>();
             //rotate it then move it "up" relative to it's rotation, away from the root cube
             newCube.transform.Rotate(0f, 0f, currAngle);
-            // distance moved also needs to be scaled relative to the size of this visualTrie and the requested branch length. the 2... makes it work. I think because of the way cylinder size is measured?
+            // distance moved also needs to be scaled relative to the size of this visualTrie and the requested branch length. the 2... makes it work. I think because of the way cylinder length is measured?
             newCube.transform.position += newCube.transform.up.normalized * transform.lossyScale.y * branchLength * 2f;
             newCube.setStickLength(branchLength);
             newCube.assignNode(rootCube.trieNode.Children[i]);
             //recurse the newly made cube, then continue with this set of branches
             renderBranches(newCube, currDepth + 1);
-            currAngle += sectorWidth;
+            currAngle -= sectorWidth;
         }
     }
 
@@ -99,8 +123,22 @@ public class VisualTrie : MonoBehaviour {
         }
     }
 
+    private void FixedUpdate() {
+        if (movingRoot) {
+            rootCube.transform.position = Vector3.Lerp(rootCube.transform.position, transform.position, 8f * Time.deltaTime);
+            rootCube.transform.rotation = Quaternion.Slerp(rootCube.transform.rotation, transform.rotation, 10f * Time.deltaTime);
+            //rootCube.transform.position = Vector3.RotateTowards(rootCube.transform.position, transform.position, 10f * Time.deltaTime, 0.0f);
+
+            if (rootCube.transform.position == transform.position && rootCube.transform.rotation == transform.rotation) {
+                //movingRoot = false;
+            }
+        }
+    }
+
     // Update is called once per frame
     void Update() {
+        // use this to update the visual trie as you tweak settings
+        //updateTriePrefix();
         foreach (char c in Input.inputString) {
             if (c == "\b"[0]) {
                 if (currInputPrefix.Length != 0) {
@@ -109,18 +147,21 @@ public class VisualTrie : MonoBehaviour {
             } else {
                 if (c == " "[0]) {
                     currInputPrefix = "";
+                    updateTriePrefix();
                 } else {
                     currInputPrefix += c;
+                    updateTriePrefix();
                 }
             }
         }
-        updateTriePrefix();
+        
         if (Input.GetKeyDown("left")) {
-            advanceTrie(1);
-        }
-        if (Input.GetKeyDown("right")) {
             advanceTrie(0);
         }
+        if (Input.GetKeyDown("right")) {
+            advanceTrie(1);
+        }
+        displayText.text = currInputPrefix;
     }
 
 }

@@ -6,9 +6,9 @@ public class LetterCube : MonoBehaviour {
 
     // these things are children of the LetterNode object gotten by drag/drop reference in the prefab
     public Transform stick;
-    public Text nodeText;
-
+    public Text cubeText;
     public Node trieNode;
+    public bool isTruncated;
 
     public void setStickLength(float newLength) { 
         stick.transform.localScale = new Vector3(stick.transform.localScale.x, newLength, stick.transform.localScale.z);
@@ -23,6 +23,6 @@ public class LetterCube : MonoBehaviour {
 
     public void assignNode(Node newNode) {
         trieNode = newNode;
-        nodeText.text = trieNode.Value.ToString();
+        cubeText.text = trieNode.Value.ToString();
     }
 }

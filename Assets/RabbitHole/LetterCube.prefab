@@ -87,7 +87,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1059460777396516}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: -9.19714, y: 7.6850753, z: -9.264645}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 224312450913741034}
@@ -192,11 +192,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 1059460777396516}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4342eb7e54bcdd84eae0a1636a534424, type: 3}
+  m_Script: {fileID: 11500000, guid: 5ba47728ba7e1024b9e6471e725dc944, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   stick: {fileID: 4652534760976840}
-  nodeText: {fileID: 114740582542778530}
+  cubeText: {fileID: 114740582542778530}
+  isFirst: 0
+  isTruncated: 0
 --- !u!114 &114740582542778530
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -217,7 +219,7 @@ MonoBehaviour:
     m_TypeName: UnityEngine.UI.MaskableGraphic+CullStateChangedEvent, UnityEngine.UI,
       Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
   m_FontData:
-    m_Font: {fileID: 12800000, guid: 7488336c876a76f47bb221b942f49fae, type: 3}
+    m_Font: {fileID: 12800000, guid: 7c734723e7cb3134e89b63cab302ef2a, type: 3}
     m_FontSize: 70
     m_FontStyle: 0
     m_BestFit: 1
