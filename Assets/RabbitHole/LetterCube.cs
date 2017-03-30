@@ -15,6 +15,12 @@ public class LetterCube : MonoBehaviour {
         stick.transform.localPosition = new Vector3(0, -newLength, 0);
     }
 
+    public void makeInvisible() {
+        setStickLength(0);
+        transform.GetComponent<MeshRenderer>().enabled = false;
+        transform.Find("Label").gameObject.SetActive(false);
+    }
+
     public void assignNode(Node newNode) {
         trieNode = newNode;
         nodeText.text = trieNode.Value.ToString();

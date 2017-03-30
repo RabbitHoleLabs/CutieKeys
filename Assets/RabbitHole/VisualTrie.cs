@@ -40,14 +40,32 @@ public class VisualTrie : MonoBehaviour {
             }
             trie.Insert(wordAndFreq[1], wordWeight);
         }
+
+        //DEBUG
+        currInputPrefix = "t";
+        updateTriePrefix();
+
     }
 
-    public void updateTrie() {
+    public void updateTriePrefix() {
         clearTrie();
         rootCube = Instantiate(LetterCube, transform.position, transform.rotation, transform).GetComponent<LetterCube>();
         rootCube.assignNode(trie.Prefix(currInputPrefix));
-        rootCube.setStickLength(0);
+        rootCube.makeInvisible();
         renderBranches(rootCube, 0);
+    }
+
+    public void advanceTrie(int selection) {
+        LetterCube selectedCube = transform.GetChild(0).GetChild(selection + 2).GetComponent<LetterCube>();
+        currInputPrefix += selectedCube.trieNode.Value;
+        selectedCube.transform.SetParent(transform);
+        clearTrie();
+        rootCube = selectedCube;
+        rootCube.transform.position = transform.position;
+        rootCube.transform.rotation = transform.rotation;
+        rootCube.makeInvisible();
+        renderBranches(rootCube, 0);
+
     }
 
     private void renderBranches(LetterCube rootCube, int currDepth) {
@@ -96,6 +114,13 @@ public class VisualTrie : MonoBehaviour {
                 }
             }
         }
-        updateTrie();
+        updateTriePrefix();
+        if (Input.GetKeyDown("left")) {
+            advanceTrie(1);
+        }
+        if (Input.GetKeyDown("right")) {
+            advanceTrie(0);
+        }
     }
+
 }
