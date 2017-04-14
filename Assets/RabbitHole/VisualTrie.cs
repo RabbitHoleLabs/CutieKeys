@@ -44,14 +44,21 @@ public class VisualTrie : MonoBehaviour {
         
         currInputPrefix = "";
         movingRoot = false;
-
-        //DEBUG
-        //currInputPrefix = "t";
-        updateTriePrefix();
-
+        typeLetter("");
     }
 
-    public void updateTriePrefix() {
+    public void typeLetter(string letter) {
+        Debug.Log("type letter called with " + letter);
+        if (letter == " ") {
+            currInputPrefix = "";
+        } else if (letter == "\b") { //backspace
+            if (currInputPrefix.Length > 0) {
+                currInputPrefix = currInputPrefix.Substring(0, currInputPrefix.Length - 1);
+            }
+        } else {
+            currInputPrefix += letter;
+        }
+        
         clearTrie();
         rootCube = Instantiate(LetterCube, transform.position, transform.rotation, transform).GetComponent<LetterCube>();
         rootCube.assignNode(trie.Prefix(currInputPrefix));
@@ -59,12 +66,13 @@ public class VisualTrie : MonoBehaviour {
         renderBranches(rootCube, 0);
     }
 
-    public void advanceTrie(int selection) {
+    public void selectLetter(int selection) {
         // get letterCube from selection number
         LetterCube selectedCube = rootCube.transform.GetChild(selection + 2).GetComponent<LetterCube>(); // +2 to get past stick and label
+        //add the selected letter to what's typed out
+        displayText.text += selectedCube.trieNode.Value;
         if (selectedCube.trieNode.Value == ' ') {
-            currInputPrefix = "";
-            updateTriePrefix();
+            typeLetter(" ");
             return;
         }
         currInputPrefix += selectedCube.trieNode.Value;
@@ -119,49 +127,24 @@ public class VisualTrie : MonoBehaviour {
 
     private void clearTrie() {
         if (rootCube != null) {
-            DestroyImmediate(rootCube.transform.gameObject);
+            Destroy(rootCube.transform.gameObject);
         }
     }
 
     private void FixedUpdate() {
         if (movingRoot) {
+            Vector3 prevPosition = rootCube.transform.position;
+            Quaternion prevRotation = rootCube.transform.rotation;
             rootCube.transform.position = Vector3.Lerp(rootCube.transform.position, transform.position, 8f * Time.deltaTime);
             rootCube.transform.rotation = Quaternion.Slerp(rootCube.transform.rotation, transform.rotation, 10f * Time.deltaTime);
-            //rootCube.transform.position = Vector3.RotateTowards(rootCube.transform.position, transform.position, 10f * Time.deltaTime, 0.0f);
+            if (rootCube.transform.position == prevPosition && rootCube.transform.rotation == prevRotation) {
+                //movingRoot = false;
+            }
 
             if (rootCube.transform.position == transform.position && rootCube.transform.rotation == transform.rotation) {
                 //movingRoot = false;
             }
         }
-    }
-
-    // Update is called once per frame
-    void Update() {
-        // use this to update the visual trie as you tweak settings
-        //updateTriePrefix();
-        foreach (char c in Input.inputString) {
-            if (c == "\b"[0]) {
-                if (currInputPrefix.Length != 0) {
-                    currInputPrefix = currInputPrefix.Substring(0, currInputPrefix.Length - 1);
-                }
-            } else {
-                if (c == " "[0]) {
-                    currInputPrefix = "";
-                    updateTriePrefix();
-                } else {
-                    currInputPrefix += c;
-                    updateTriePrefix();
-                }
-            }
-        }
-        
-        if (Input.GetKeyDown("left")) {
-            advanceTrie(0);
-        }
-        if (Input.GetKeyDown("right")) {
-            advanceTrie(1);
-        }
-        displayText.text = currInputPrefix;
     }
 
 }

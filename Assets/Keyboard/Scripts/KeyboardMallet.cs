@@ -21,12 +21,21 @@ namespace Normal.UI {
         [HideInInspector]
         public Keyboard _keyboard;
 
+        public VisualTrie inputTrie;
+        public int tempSelection;
+
         void Awake() {
             // Configure the rigidbody
             Rigidbody rigidbody = GetComponent<Rigidbody>();
             rigidbody.useGravity  = false;
             rigidbody.isKinematic = true;
             rigidbody.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+            // Add input listener for child trie input
+            _controller.TriggerClicked += new ClickedEventHandler(handleTrigger);
+        }
+        
+        private void handleTrigger(object sender, ClickedEventArgs e) {
+            inputTrie.selectLetter(tempSelection);
         }
 
         // Watch for new poses event from SteamVR.
