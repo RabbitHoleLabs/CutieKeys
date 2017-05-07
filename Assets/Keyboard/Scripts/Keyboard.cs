@@ -25,8 +25,6 @@ namespace Normal.UI {
             Numbers
         };
 
-        public VisualTrie visualTrie;
-
         private Layout _layout = Layout.Letters;
         public  Layout  layout { get { return _layout; } set { SetLayout(value); } }
 
@@ -66,6 +64,7 @@ namespace Normal.UI {
                         layout = Layout.Numbers;
                     else if (layout == Layout.Numbers)
                         layout = Layout.Letters;
+
                     shouldFireKeyPressEvent = false;
                 } else if (keyPress == "\\b") {
                     // Backspace
@@ -77,7 +76,7 @@ namespace Normal.UI {
                 }
 
                 if (shouldFireKeyPressEvent) {
-                    visualTrie.typeLetter(keyPress);
+                    GetComponent<TrieManager>().updateTrie(keyPress);
                     keyPressed(this, keyPress);
                 }
             }
