@@ -10,6 +10,7 @@ public class VisualTrie : MonoBehaviour {
     public Transform LetterCube;
     public Text displayText;
 
+    // VisualTrie display modifiers
     public int branchesToDisplay;
     public int depth;
     public float branchConeWidth;
@@ -18,12 +19,11 @@ public class VisualTrie : MonoBehaviour {
 
     private Trie trie;
     private LetterCube rootCube;
-    private string currInputPrefix;
     private bool movingRoot;
 
 
     // Load trie data from file
-    void Start() {
+    void Awake() {
         trie = new Trie();
         StreamReader stream = new StreamReader(wordList);
 
@@ -41,33 +41,28 @@ public class VisualTrie : MonoBehaviour {
             }
             trie.Insert(wordAndFreq[1], wordWeight);
         }
-
-        currInputPrefix = "";
+        
         movingRoot = false;
-        typeLetter("");
+        reloadTrie();
     }
 
-    public void typeLetter(string letter) {
-        //Debug.Log("type letter called with " + letter);
-        if (letter == " ") {
-            currInputPrefix = "";
+    private void clearTrie() {
+        if (rootCube != null) {
+            Destroy(rootCube.transform.gameObject);
         }
-        else if (letter == "\b") { //backspace
-            if (currInputPrefix.Length > 0) {
-                currInputPrefix = currInputPrefix.Substring(0, currInputPrefix.Length - 1);
-            }
-        }
-        else {
-            currInputPrefix += letter;
-        }
+    }
 
+    public void reloadTrie() {
         clearTrie();
         rootCube = Instantiate(LetterCube, transform.position, transform.rotation, transform).GetComponent<LetterCube>();
-        rootCube.assignNode(trie.Prefix(currInputPrefix));
+        string wordInProgress = displayText.text.Substring(displayText.text.LastIndexOf(" ") + 1);
+        //if the word being typed isn't found in the trie, trie.Prefix returns the root of the trie, aka the most common starting characters
+        rootCube.assignTrieNode(trie.Prefix(wordInProgress));
         rootCube.makeInvisible();
         renderBranches(rootCube, 0);
     }
 
+    /*
     public void selectLetter(int selection) {
         // get letterCube from selection number
         LetterCube selectedCube = rootCube.transform.GetChild(selection + 2).GetComponent<LetterCube>(); // +2 to get past stick and label
@@ -93,9 +88,8 @@ public class VisualTrie : MonoBehaviour {
             branch.tag = "Untagged";
         }
 
-
-
     }
+    */
 
     private void renderBranches(LetterCube rootCube, int currDepth) {
         // base case
@@ -117,19 +111,13 @@ public class VisualTrie : MonoBehaviour {
             LetterCube newCube = Instantiate(LetterCube, rootCube.transform.position, rootCube.transform.rotation, rootCube.transform).GetComponent<LetterCube>();
             //rotate it then move it "up" relative to it's rotation, away from the root cube
             newCube.transform.Rotate(0f, 0f, currAngle);
-            // distance moved also needs to be scaled relative to the size of this visualTrie and the requested branch length. the 2... makes it work. I think because of the way cylinder length is measured?
+            // distance moved also needs to be scaled relative to the size of this visualTrie and the requested branch length. The 2... makes it work. I think because of the way cylinder length is measured?
             newCube.transform.position += newCube.transform.up.normalized * transform.lossyScale.y * branchLength * 2f;
             newCube.setStickLength(branchLength);
-            newCube.assignNode(rootCube.trieNode.Children[i]);
-            //recurse the newly made cube, then continue with this set of branches
+            newCube.assignTrieNode(rootCube.trieNode.Children[i]);
+            //recurse on the newly made cube, then continue with this set of branches
             renderBranches(newCube, currDepth + 1);
             currAngle -= sectorWidth;
-        }
-    }
-
-    private void clearTrie() {
-        if (rootCube != null) {
-            Destroy(rootCube.transform.gameObject);
         }
     }
 
@@ -151,6 +139,6 @@ public class VisualTrie : MonoBehaviour {
     }
 
     private void Update() {
-        typeLetter("");
+        //reloadTrie();
     }
 }

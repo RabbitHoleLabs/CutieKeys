@@ -10,6 +10,8 @@ namespace Normal.UI {
         private Keyboard _keyboard;
         public  Keyboard  keyboard { get { return _keyboard; } set { SetKeyboard(value); } }
 
+        public VisualTrie visualTrie;
+
         void Awake() {
             StartObservingKeyboard(_keyboard);
         }
@@ -55,6 +57,7 @@ namespace Normal.UI {
             }
 
             _text.text = text;
+            visualTrie.reloadTrie();
         }
     }
 }

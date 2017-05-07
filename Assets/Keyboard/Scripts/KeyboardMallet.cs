@@ -85,6 +85,12 @@ namespace Normal.UI {
                 TriggerHapticPulse();
             }
         }
+        /*
+         * OnControllerTriggerPress()
+         * Fire raycast at visualtrie
+         * call visualtrie._laserSelectedVisualTrieKey (or something)
+         * inside this method in VisualTrie.cs there will be a delegate from KeyboardDisplay that we use to update the display
+         */
 
         void Update() {
             // I want the value from the previous frame.

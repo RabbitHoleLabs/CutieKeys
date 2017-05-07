@@ -21,7 +21,7 @@ public class LetterCube : MonoBehaviour {
         transform.Find("Label").gameObject.SetActive(false);
     }
 
-    public void assignNode(Node newNode) {
+    public void assignTrieNode(Node newNode) {
         trieNode = newNode;
         cubeText.text = trieNode.Value.ToString();
     }
