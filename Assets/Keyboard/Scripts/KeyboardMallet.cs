@@ -7,8 +7,6 @@ namespace Normal.UI {
     public class KeyboardMallet : MonoBehaviour {
         [SerializeField]
         private SteamVR_TrackedObject _trackedObject;
-        [SerializeField]
-        private SteamVR_TrackedController _controller;
 
         [SerializeField]
         private Transform _head;

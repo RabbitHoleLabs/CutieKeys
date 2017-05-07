@@ -41,17 +41,26 @@ public class VisualTrie : MonoBehaviour {
             }
             trie.Insert(wordAndFreq[1], wordWeight);
         }
-        
+
         currInputPrefix = "";
         movingRoot = false;
-
-        //DEBUG
-        //currInputPrefix = "t";
-        updateTriePrefix();
-
+        typeLetter("");
     }
 
-    public void updateTriePrefix() {
+    public void typeLetter(string letter) {
+        //Debug.Log("type letter called with " + letter);
+        if (letter == " ") {
+            currInputPrefix = "";
+        }
+        else if (letter == "\b") { //backspace
+            if (currInputPrefix.Length > 0) {
+                currInputPrefix = currInputPrefix.Substring(0, currInputPrefix.Length - 1);
+            }
+        }
+        else {
+            currInputPrefix += letter;
+        }
+
         clearTrie();
         rootCube = Instantiate(LetterCube, transform.position, transform.rotation, transform).GetComponent<LetterCube>();
         rootCube.assignNode(trie.Prefix(currInputPrefix));
@@ -59,12 +68,13 @@ public class VisualTrie : MonoBehaviour {
         renderBranches(rootCube, 0);
     }
 
-    public void advanceTrie(int selection) {
+    public void selectLetter(int selection) {
         // get letterCube from selection number
         LetterCube selectedCube = rootCube.transform.GetChild(selection + 2).GetComponent<LetterCube>(); // +2 to get past stick and label
+        //add the selected letter to what's typed out
+        displayText.text += selectedCube.trieNode.Value;
         if (selectedCube.trieNode.Value == ' ') {
-            currInputPrefix = "";
-            updateTriePrefix();
+            typeLetter(" ");
             return;
         }
         currInputPrefix += selectedCube.trieNode.Value;
@@ -78,12 +88,12 @@ public class VisualTrie : MonoBehaviour {
         movingRoot = true;
         //extend any truncated branchesat the end of the new remaining branch
         GameObject[] truncatedBranches = GameObject.FindGameObjectsWithTag("truncatedBranch");
-        foreach(GameObject branch in truncatedBranches) {
+        foreach (GameObject branch in truncatedBranches) {
             renderBranches(branch.transform.GetComponent<LetterCube>(), depth - 1);
             branch.tag = "Untagged";
         }
 
-        
+
 
     }
 
@@ -101,7 +111,7 @@ public class VisualTrie : MonoBehaviour {
         // we've chosen not to allow branches on the edges of this cone, so number of sectors will be branches + 1
         float sectorWidth = currConeWidth / (branchesToDisplay + 1);
         // starting angle is half of the branch cone width from vertical + one sector width
-        float currAngle = (currConeWidth/2f) - sectorWidth;
+        float currAngle = (currConeWidth / 2f) - sectorWidth;
         for (int i = 0; i < branchesToDisplay && i < rootCube.trieNode.Children.Count; i++) {
             // instantiate new letterCube parented to current cube
             LetterCube newCube = Instantiate(LetterCube, rootCube.transform.position, rootCube.transform.rotation, rootCube.transform).GetComponent<LetterCube>();
@@ -119,15 +129,20 @@ public class VisualTrie : MonoBehaviour {
 
     private void clearTrie() {
         if (rootCube != null) {
-            DestroyImmediate(rootCube.transform.gameObject);
+            Destroy(rootCube.transform.gameObject);
         }
     }
 
     private void FixedUpdate() {
+        //TODO: make this a coroutine
         if (movingRoot) {
+            Vector3 prevPosition = rootCube.transform.position;
+            Quaternion prevRotation = rootCube.transform.rotation;
             rootCube.transform.position = Vector3.Lerp(rootCube.transform.position, transform.position, 8f * Time.deltaTime);
             rootCube.transform.rotation = Quaternion.Slerp(rootCube.transform.rotation, transform.rotation, 10f * Time.deltaTime);
-            //rootCube.transform.position = Vector3.RotateTowards(rootCube.transform.position, transform.position, 10f * Time.deltaTime, 0.0f);
+            if (rootCube.transform.position == prevPosition && rootCube.transform.rotation == prevRotation) {
+                //movingRoot = false;
+            }
 
             if (rootCube.transform.position == transform.position && rootCube.transform.rotation == transform.rotation) {
                 //movingRoot = false;
@@ -135,33 +150,7 @@ public class VisualTrie : MonoBehaviour {
         }
     }
 
-    // Update is called once per frame
-    void Update() {
-        // use this to update the visual trie as you tweak settings
-        //updateTriePrefix();
-        foreach (char c in Input.inputString) {
-            if (c == "\b"[0]) {
-                if (currInputPrefix.Length != 0) {
-                    currInputPrefix = currInputPrefix.Substring(0, currInputPrefix.Length - 1);
-                }
-            } else {
-                if (c == " "[0]) {
-                    currInputPrefix = "";
-                    updateTriePrefix();
-                } else {
-                    currInputPrefix += c;
-                    updateTriePrefix();
-                }
-            }
-        }
-        
-        if (Input.GetKeyDown("left")) {
-            advanceTrie(0);
-        }
-        if (Input.GetKeyDown("right")) {
-            advanceTrie(1);
-        }
-        displayText.text = currInputPrefix;
+    private void Update() {
+        typeLetter("");
     }
-
 }
