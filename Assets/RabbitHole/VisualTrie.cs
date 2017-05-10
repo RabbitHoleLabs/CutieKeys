@@ -44,6 +44,7 @@ public class VisualTrie : MonoBehaviour {
         
         movingRoot = false;
         reloadTrie();
+        selectLetters(transform.GetChild(0).GetChild(2).GetChild(2));
     }
 
     private void clearTrie() {
@@ -60,6 +61,17 @@ public class VisualTrie : MonoBehaviour {
         rootCube.assignTrieNode(trie.Prefix(wordInProgress));
         rootCube.makeInvisible();
         renderBranches(rootCube, 0);
+    }
+
+    public void selectLetters(Transform selectedCube) {
+        Transform currentCube = selectedCube;
+        string selection = "";
+        while (currentCube.parent.name == "LetterCube(Clone)") {
+            selection = selection.Insert(0, currentCube.GetComponent<LetterCube>().trieNode.Value.ToString());
+            currentCube = currentCube.parent;
+        }
+        displayText.text += selection;
+        reloadTrie();
     }
 
     /*

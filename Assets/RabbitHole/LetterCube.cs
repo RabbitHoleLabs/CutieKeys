@@ -16,9 +16,9 @@ public class LetterCube : MonoBehaviour {
     }
 
     public void makeInvisible() {
-        setStickLength(0);
         transform.GetComponent<MeshRenderer>().enabled = false;
-        transform.Find("Label").gameObject.SetActive(false);
+        transform.GetChild(0).gameObject.SetActive(false); //disable label
+        transform.GetChild(1).gameObject.SetActive(false); //disable stick
     }
 
     public void assignTrieNode(Node newNode) {
